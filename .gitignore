@@ -1,0 +1,4 @@
+conf.py
+.idea/
+.ruff.toml
+.flake8
