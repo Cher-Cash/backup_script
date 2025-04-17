@@ -54,7 +54,7 @@ def extract_datetime(filename):
     return None
 
 
-def get_day_list(s3api, need_pref, month_pref="backups/month/"):
+def get_day_list(s3api, need_pref, month_pref=config["month_folder"]):
     file_list = s3api.list_objects(need_pref)
     return [
         file["Key"]
@@ -73,13 +73,13 @@ def get_month_list(s3api, pref):
 
 
 def search_month_backups(s3api):
-    day_files = get_day_list(s3api,"backups/")
+    day_files = get_day_list(s3api, config["every_day_folder"])
     print(day_files)
-    month_files = get_month_list(s3api,"backups/month/")
+    month_files = get_month_list(s3api, config["month_folder"])
     for file in day_files:
         date_str = extract_datetime(file)
         if date_str.day == 1:
-            new_file_name = "backups/month/" + file[8:]
+            new_file_name = config["month_folder"] + file[8:]
             if new_file_name in month_files:
                 print("file already exists")
                 continue
@@ -89,7 +89,7 @@ def search_month_backups(s3api):
 
 
 def sort_month_backups(s3api, param=2):
-    files = get_month_list(s3api,"backups/month/")
+    files = get_month_list(s3api, config["month_folder"])
     valid_files = [file for file in files if extract_datetime(file) is not None]
     valid_files.sort(key=lambda x: extract_datetime(x), reverse=True)
     files_to_delete = valid_files[param:]
@@ -99,7 +99,7 @@ def sort_month_backups(s3api, param=2):
 
 
 def sort_everyday_backups(s3api, param=3):
-    files = get_day_list(s3api,"backups/")
+    files = get_day_list(s3api, config["every_day_folder"])
     valid_files = [file for file in files if extract_datetime(file) is not None]
     valid_files.sort(key=lambda x: extract_datetime(x), reverse=True)
     print(valid_files)
