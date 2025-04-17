@@ -59,7 +59,7 @@ def get_day_list(s3api, need_pref, month_pref=config["month_folder"]):
     return [
         file["Key"]
         for file in file_list
-        if file["Key"].endswith("/") and month_pref not in file["Key"]
+        if not file["Key"].endswith("/") and month_pref not in file["Key"]
     ]
 
 
@@ -68,7 +68,7 @@ def get_month_list(s3api, pref):
     return [
         file["Key"]
         for file in file_list
-        if file["Key"].endswith("/")
+        if not file["Key"].endswith("/")
     ]
 
 
