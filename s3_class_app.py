@@ -54,28 +54,32 @@ def extract_datetime(filename):
     return None
 
 
-def get_day_list(s3api, need_pref, month_pref=config["month_folder"]):
+def get_day_list(s3api, need_pref, file_extension, month_pref=config["month_folder"]):
     file_list = s3api.list_objects(need_pref)
-    return [
+    valid_files = [
         file["Key"]
         for file in file_list
-        if not file["Key"].endswith("/") and month_pref not in file["Key"]
+        if not file["Key"].endswith("/") and month_pref not in file["Key"] and file["Key"].endswith(file_extension)
     ]
+    print("Кол-во полученных файлов по заданным параметрам: ", len(valid_files))
+    return valid_files
 
 
-def get_month_list(s3api, pref):
+def get_month_list(s3api, pref, file_extension):
     file_list = s3api.list_objects(pref)
-    return [
+    valid_files = [
         file["Key"]
         for file in file_list
-        if not file["Key"].endswith("/")
+        if not file["Key"].endswith("/") and file["Key"].endswith(file_extension)
     ]
+    print("Кол-во полученных файлов по заданным параметрам: ", len(valid_files))
+    return valid_files
 
 
 def search_month_backups(s3api):
-    day_files = get_day_list(s3api, config["every_day_folder"])
+    day_files = get_day_list(s3api, config["every_day_folder"], config["file_extension"])
     print(day_files)
-    month_files = get_month_list(s3api, config["month_folder"])
+    month_files = get_month_list(s3api, config["month_folder"], config["file_extension"])
     for file in day_files:
         date_str = extract_datetime(file)
         if date_str.day == 1:
@@ -89,21 +93,23 @@ def search_month_backups(s3api):
 
 
 def sort_month_backups(s3api, param=2):
-    files = get_month_list(s3api, config["month_folder"])
+    files = get_month_list(s3api, config["month_folder"], config["file_extension"])
     valid_files = [file for file in files if extract_datetime(file) is not None]
     valid_files.sort(key=lambda x: extract_datetime(x), reverse=True)
     files_to_delete = valid_files[param:]
+    print("Кол-во файлов к удалению: ", len(files_to_delete))
     for file in files_to_delete:
         s3api.delete_file(file)
         print(f"Удален файл: {file}")
 
 
 def sort_everyday_backups(s3api, param=3):
-    files = get_day_list(s3api, config["every_day_folder"])
+    files = get_day_list(s3api, config["every_day_folder"],config["file_extension"])
     valid_files = [file for file in files if extract_datetime(file) is not None]
     valid_files.sort(key=lambda x: extract_datetime(x), reverse=True)
     print(valid_files)
     files_to_delete = valid_files[param:]
+    print("Кол-во файлов к удалению: ", len(files_to_delete))
     for file in files_to_delete:
         s3api.delete_file(file)
         print(f"Удален файл: {file}")
